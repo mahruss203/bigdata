@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ARIMA Visualization</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 40px;
+      }
+
+      .info-section {
+        margin-bottom: 30px;
+      }
+
+      .info-grid-main {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .info-grid-secondary {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .info-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 30px 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .info-card h3 {
+        color: #667eea;
+        font-size: 0.85em;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 600;
+      }
+
+      .info-card p {
+        font-size: 2em;
+        font-weight: bold;
+        color: #333;
+        line-height: 1.2;
+      }
+
+      .info-card.highlight {
+        background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+      }
+
+      .info-card.highlight h3 {
+        color: #d63031;
+      }
+
+      .info-card.large {
+        grid-column: span 2;
+      }
+
+      .prediction-form {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 35px;
+        border-radius: 12px;
+        margin-bottom: 35px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        border: 3px solid #667eea;
+      }
+
+      .prediction-form h3 {
+        color: #667eea;
+        margin-bottom: 25px;
+        font-size: 1.6em;
+        text-align: center;
+        font-weight: 700;
+      }
+
+      .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .form-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .form-field {
+        flex: 1;
+        min-width: 250px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .form-field label {
+        font-size: 0.95em;
+        font-weight: 700;
+        color: #2d3436;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .form-field select,
+      .form-field input[type="number"] {
+        padding: 14px 18px;
+        font-size: 1.05em;
+        border: 3px solid #667eea;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        background: white;
+      }
+
+      .form-field select {
+        cursor: pointer;
+      }
+
+      .form-field select:focus,
+      .form-field input[type="number"]:focus {
+        outline: none;
+        border-color: #764ba2;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .form-field select:hover,
+      .form-field input[type="number"]:hover {
+        border-color: #764ba2;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      .btn-submit {
+        padding: 15px 50px;
+        font-size: 1.15em;
+        font-weight: bold;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+      }
+
+      .btn-submit:active {
+        transform: translateY(-1px);
+      }
+
+      .current-prediction {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 1.05em;
+        color: #2d3436;
+        font-weight: 600;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 8px;
+      }
+
+      .current-prediction strong {
+        color: #667eea;
+        font-weight: 700;
+      }
+
+      .visualization {
+        background-color: #f9f9f9;
+        padding: 35px;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .visualization h2 {
+        color: #2d3436;
+        margin-bottom: 25px;
+        font-size: 1.9em;
+        font-weight: 700;
+      }
+
+      .visualization img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+      }
+
+      .visualization img:hover {
+        transform: scale(1.02);
+      }
+
+      .alert {
+        background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        border-left: 6px solid #667eea;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+      }
+
+      .alert h4 {
+        color: #667eea;
+        margin-bottom: 12px;
+        font-size: 1.3em;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .alert p {
+        color: #2d3436;
+        line-height: 1.8;
+        font-size: 1.05em;
+      }
+
+      .alert strong {
+        color: #667eea;
+        font-weight: 700;
+      }
+
+      .description {
+        background-color: #f0f4f8;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border-left: 5px solid #667eea;
+      }
+
+      .description h3 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+      }
+
+      .description p {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 10px;
+      }
+
+      .description ul {
+        margin-left: 20px;
+        margin-top: 10px;
+      }
+
+      .description li {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 8px;
+      }
+
+      .description strong {
+        color: #667eea;
+      }
+
+      .navigation {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 15px 30px;
+        text-decoration: none;
+        text-align: center;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1em;
+        transition: all 0.3s ease;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+      }
+
+      .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 1.8em;
+        }
+
+        .navigation {
+          flex-direction: column;
+        }
+
+        .info-grid-main {
+          grid-template-columns: 1fr;
+        }
+
+        .info-grid-secondary {
+          grid-template-columns: 1fr;
+        }
+
+        .form-row {
+          flex-direction: column;
+        }
+
+        .form-field {
+          width: 100%;
+          max-width: 100% !important;
+        }
+
+        .content {
+          padding: 20px;
+        }
+
+        .prediction-form {
+          padding: 25px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📈 ARIMA Visualization</h1>
+        <p>
+          Time Series Analysis with AutoRegressive Integrated Moving Average
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="prediction-form">
+          <h3>🔮 Configure ARIMA Prediction Parameters</h3>
+          <form method="POST" action="/arima">
+            <div class="form-container">
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="country">🌍 Select Country</label>
+                  <select id="country" name="country" required>
+                    {% for country in countries %}
+                    <option value="{{ country }}" {% if country == selected_country %}selected{% endif %}>
+                      {{ country }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-field" style="max-width: 200px;">
+                  <label for="years">📅 Prediction Years</label>
+                  <input
+                    type="number"
+                    id="years"
+                    name="years"
+                    min="1"
+                    max="20"
+                    value="{{ years_to_predict }}"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-submit">🚀 Generate Prediction</button>
+              </div>
+              <div class="current-prediction">
+                Showing prediction for <strong>{{ selected_country }}</strong> — {{ years_to_predict }} years ahead
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="info-section">
+          <div class="info-grid-main">
+            <div class="info-card">
+              <h3>🌍 Country</h3>
+              <p style="font-size: 1.5em;">{{ selected_country }}</p>
+            </div>
+            <div class="info-card">
+              <h3>🤖 Model</h3>
+              <p style="font-size: 1.5em;">{{ arima_order }}</p>
+            </div>
+            <div class="info-card">
+              <h3>🎯 MAPE Accuracy</h3>
+              <p>{{ mape }}%</p>
+            </div>
+            <div class="info-card">
+              <h3>📅 Historical Years</h3>
+              <p>{{ num_historical }}</p>
+            </div>
+            <div class="info-card">
+              <h3>🔮 Prediction Years</h3>
+              <p>{{ num_predictions }}</p>
+            </div>
+          </div>
+          
+          <div class="info-grid-secondary">
+            <div class="info-card highlight">
+              <h3>📊 Last Historical Data</h3>
+              <p style="font-size: 1.6em;">{{ last_historical_value }}</p>
+              <p style="font-size: 0.9em; margin-top: 8px; opacity: 0.8;">(Year {{ last_historical_year }})</p>
+            </div>
+            <div class="info-card highlight">
+              <h3>🚀 Last Prediction</h3>
+              <p style="font-size: 1.6em;">{{ last_prediction_value }}</p>
+              <p style="font-size: 0.9em; margin-top: 8px; opacity: 0.8;">(Year {{ last_prediction_year }})</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="visualization">
+          <h2>📊 Chart of Historical Data and Predictions</h2>
+          <img
+            src="{{ url_for('static', filename=image_file) }}"
+            alt="ARIMA Visualization"
+          />
+        </div>
+
+        <div class="alert">
+          <h4>ℹ️ Model Information</h4>
+          <p>
+            <strong>Model:</strong> {{ arima_order }} with MAPE accuracy <strong>{{ mape }}%</strong> (lower is better).
+            The vertical red line marks the boundary between historical data (year
+            {{ last_historical_year }}) and prediction results (starting year {{
+            first_prediction_year }}). Data before the line is actual data for <strong>{{ selected_country }}</strong>,
+            while data after the line is ARIMA model prediction results with optimal parameters determined automatically.
+          </p>
+        </div>
+
+        <div class="description">
+          <h3>📖 Visualization Explanation</h3>
+          <p>
+            <strong>ARIMA (AutoRegressive Integrated Moving Average)</strong>
+            is a statistical model used for time series data analysis and forecasting. This model uses <strong>Auto ARIMA</strong> to automatically find optimal parameters.
+          </p>
+
+          <p><strong>ARIMA(p, d, q) Components:</strong></p>
+          <ul>
+            <li>
+              <strong>p (AR - AutoRegressive)</strong>: Model that uses
+              the relationship between observations with a number of lagged observations
+            </li>
+            <li>
+              <strong>d (I - Integrated)</strong>: Uses differencing to
+              make data stationary
+            </li>
+            <li>
+              <strong>q (MA - Moving Average)</strong>: Model that uses
+              the dependency between observations and residual errors
+            </li>
+          </ul>
+
+          <p><strong>Application Features:</strong></p>
+          <ul>
+            <li>
+              <strong>Select Country</strong>: Choose the country you want to analyze from the dropdown (194 countries available)
+            </li>
+            <li>
+              <strong>Custom Prediction Years</strong>: Determine the number of future years to predict (1-20 years)
+            </li>
+            <li>
+              <strong>Auto Parameter Selection</strong>: The model automatically determines the best ARIMA parameters for each country
+            </li>
+            <li>
+              <strong>Accuracy Evaluation (MAPE)</strong>: Displays Mean Absolute Percentage Error to measure model accuracy
+            </li>
+          </ul>
+
+          <p><strong>Visualization Interpretation:</strong></p>
+          <ul>
+            <li>
+              <strong>Solid blue line</strong>: Displays actual historical
+              stroke deaths data per year
+            </li>
+            <li>
+              <strong>Dashed orange line</strong>: Displays
+              ARIMA model prediction results for future years
+            </li>
+            <li>
+              <strong>Vertical red line</strong>: Marks the boundary between
+              historical data and predictions
+            </li>
+            <li>
+              <strong>Markers (o and □)</strong>: Show data points
+              for easier reading
+            </li>
+            <li>
+              <strong>Trend</strong>: General pattern of data movement over
+              time - up, down, or stable
+            </li>
+          </ul>
+
+          <p><strong>ARIMA Model Uses:</strong></p>
+          <ul>
+            <li>Forecast future stroke deaths based on historical patterns per country</li>
+            <li>Identify trends and patterns in time series data</li>
+            <li>Assist in health planning and medical resource allocation</li>
+            <li>Evaluate and monitor health performance over time</li>
+            <li>Cross-country comparisons for stroke prevention strategies</li>
+          </ul>
+        </div>
+
+        <div class="navigation">
+          <a href="/" class="btn btn-primary">🏠 Home Page</a>
+          <a href="/kmeans" class="btn btn-secondary">🗺️ K-Means Visualization</a>
+          <a href="/arima" class="btn btn-success">🔄 Refresh Visualization</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

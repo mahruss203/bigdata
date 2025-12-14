@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>K-Means Clustering Visualization</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 40px;
+      }
+
+      .info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .info-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+      }
+
+      .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .info-card h3 {
+        color: #667eea;
+        font-size: 1em;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .info-card p {
+        font-size: 2em;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .visualization {
+        background-color: #f9f9f9;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .visualization h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+      }
+
+      .map-container {
+        width: 100%;
+        height: 750px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .map-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      .cluster-stats {
+        background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      .cluster-stats h3 {
+        color: #d63031;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+      }
+
+      .cluster-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .cluster-stat-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .cluster-stat-item .cluster-num {
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 5px;
+      }
+
+      .cluster-stat-item .cluster-count {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #d63031;
+      }
+
+      .cluster-explanation {
+        background-color: #f0f4f8;
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border-left: 5px solid #667eea;
+      }
+
+      .cluster-explanation h3 {
+        color: #667eea;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+        font-weight: 700;
+      }
+
+      .explanation-intro {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 25px;
+        font-size: 1.1em;
+        font-weight: 500;
+      }
+
+      .cluster-detail-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid #667eea;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .cluster-detail-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .cluster-detail-card.cluster-0 {
+        border-left-color: #1f77b4;
+      }
+
+      .cluster-detail-card.cluster-1 {
+        border-left-color: #ff7f0e;
+      }
+
+      .cluster-detail-card.cluster-2 {
+        border-left-color: #2ca02c;
+      }
+
+      .cluster-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .cluster-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .cluster-detail-card.cluster-0 .cluster-badge {
+        background: #1f77b4;
+      }
+
+      .cluster-detail-card.cluster-1 .cluster-badge {
+        background: #ff7f0e;
+      }
+
+      .cluster-detail-card.cluster-2 .cluster-badge {
+        background: #2ca02c;
+      }
+
+      .cluster-header h4 {
+        color: #2d3436;
+        font-size: 1.4em;
+        margin: 0;
+        font-weight: 700;
+      }
+
+      .cluster-description {
+        color: #636e72;
+        line-height: 1.7;
+        margin-bottom: 20px;
+        font-size: 1.05em;
+      }
+
+      .cluster-characteristics,
+      .cluster-examples {
+        margin-top: 20px;
+      }
+
+      .cluster-characteristics h5,
+      .cluster-examples h5 {
+        color: #667eea;
+        font-size: 1.1em;
+        margin-bottom: 12px;
+        font-weight: 700;
+      }
+
+      .cluster-characteristics ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .cluster-characteristics li {
+        color: #555;
+        margin-bottom: 10px;
+        padding-left: 25px;
+        position: relative;
+        line-height: 1.6;
+      }
+
+      .cluster-characteristics li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #667eea;
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+
+      .example-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .example-tag {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        color: #2d3436;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.95em;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .description {
+        background-color: #f0f4f8;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border-left: 5px solid #667eea;
+      }
+
+      .description h3 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+      }
+
+      .description p {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 10px;
+      }
+
+      .description ul {
+        margin-left: 20px;
+        margin-top: 10px;
+      }
+
+      .description li {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 8px;
+      }
+
+      .navigation {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 15px 30px;
+        text-decoration: none;
+        text-align: center;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1em;
+        transition: all 0.3s ease;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+      }
+
+      .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 1.8em;
+        }
+
+        .navigation {
+          flex-direction: column;
+        }
+
+        .info-cards {
+          grid-template-columns: 1fr;
+        }
+
+        .map-container {
+          height: 500px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🗺️ K-Means Clustering Visualization</h1>
+        <p>World Map with Country Groupings Based on Clusters</p>
+      </div>
+
+      <div class="content">
+        <div class="info-cards">
+          <div class="info-card">
+            <h3>Number of Clusters</h3>
+            <p>{{ num_clusters }}</p>
+          </div>
+          <div class="info-card">
+            <h3>Number of Countries</h3>
+            <p>{{ num_countries }}</p>
+          </div>
+        </div>
+
+        <div class="visualization">
+          <h2>🌍 Interactive Country Clustering Map</h2>
+          <div class="map-container">
+            <iframe src="{{ url_for('static', filename=map_file) }}"></iframe>
+          </div>
+        </div>
+
+        <div class="cluster-stats">
+          <h3>📊 Statistics of Countries per Cluster</h3>
+          <div class="cluster-stats-grid">
+            {% for cluster_id, count in cluster_stats.items() %}
+            <div class="cluster-stat-item">
+              <div class="cluster-num">Cluster {{ cluster_id }}</div>
+              <div class="cluster-count">{{ count }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="cluster-explanation">
+          <h3>🔍 Detailed Explanation of Each Cluster</h3>
+          <p class="explanation-intro">
+            K-Means Clustering groups countries based on similarity of stroke
+            death patterns. Below are the characteristics of each cluster:
+          </p>
+
+          {% for cluster_id, info in cluster_info.items() %}
+          <div class="cluster-detail-card cluster-{{ cluster_id }}">
+            <div class="cluster-header">
+              <span class="cluster-badge">Cluster {{ cluster_id }}</span>
+              <h4>{{ info.name }}</h4>
+            </div>
+
+            <p class="cluster-description">{{ info.description }}</p>
+
+            <div class="cluster-characteristics">
+              <h5>📌 Main Characteristics:</h5>
+              <ul>
+                {% for char in info.characteristics %}
+                <li>{{ char }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+
+            <div class="cluster-examples">
+              <h5>🌍 Example Countries:</h5>
+              <div class="example-tags">
+                {% for example in info.examples %}
+                <span class="example-tag">{{ example }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="description">
+          <h3>📖 Visualization Explanation</h3>
+          <p>
+            <strong>K-Means Clustering</strong> is an unsupervised machine
+            learning algorithm that groups data into several clusters based on
+            characteristic similarity.
+          </p>
+
+          <p><strong>World Map Interpretation:</strong></p>
+          <ul>
+            <li>
+              <strong>Country Color</strong>: Each country is colored based on
+              its cluster (same cluster = same color)
+            </li>
+            <li>
+              <strong>Hover/Click</strong>: Point cursor to a country to see
+              name and cluster number
+            </li>
+            <li>
+              <strong>Zoom & Pan</strong>: Use mouse scroll to zoom in/out, drag
+              to move the map
+            </li>
+            <li>
+              <strong>Color Scale</strong>: Color scale on the right side shows
+              cluster numbers
+            </li>
+            <li>
+              <strong>Geographic Patterns</strong>: Notice whether countries in
+              the same cluster are geographically close
+            </li>
+          </ul>
+
+          <p><strong>How to Use the Map:</strong></p>
+          <ul>
+            <li>Move mouse to a country to see detailed information</li>
+            <li>Use scroll to zoom in/out on a specific area</li>
+            <li>Click and drag to move map position</li>
+            <li>Notice color distribution to understand clustering patterns</li>
+          </ul>
+        </div>
+
+        <div class="navigation">
+          <a href="/" class="btn btn-primary">🏠 Home Page</a>
+          <a href="/arima" class="btn btn-secondary">📈 ARIMA Visualization</a>
+          <a href="/kmeans" class="btn btn-success">🔄 Refresh Map</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

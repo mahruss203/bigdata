@@ -1,0 +1,4 @@
+# File ini dibuat untuk memastikan folder static tetap ada di repository
+# Folder static akan berisi gambar output visualisasi:
+# - kmeans_plot.png
+# - arima_plot.png

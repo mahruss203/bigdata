@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>N-BEATS + LSTM Hybrid</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 40px;
+      }
+
+      .info-banner {
+        background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        text-align: center;
+      }
+
+      .info-banner p {
+        margin: 0;
+        font-size: 1.1em;
+        line-height: 1.6;
+      }
+
+      .visualization {
+        background-color: #f9f9f9;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .visualization h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+      }
+
+      .map-container {
+        width: 100%;
+        height: 750px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .map-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      .cluster-stats {
+        background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        color: white;
+      }
+
+      .cluster-stats h3 {
+        color: white;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+        text-align: center;
+      }
+
+      .cluster-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .cluster-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid #3498db;
+      }
+
+      .cluster-card.cluster-0 {
+        border-left-color: #3498db;
+      }
+
+      .cluster-card.cluster-1 {
+        border-left-color: #e74c3c;
+      }
+
+      .cluster-card.cluster-2 {
+        border-left-color: #f39c12;
+      }
+
+      .cluster-card h4 {
+        color: #2d3436;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .cluster-badge {
+        background: #3498db;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+
+      .cluster-card.cluster-0 .cluster-badge {
+        background: #3498db;
+      }
+
+      .cluster-card.cluster-1 .cluster-badge {
+        background: #e74c3c;
+      }
+
+      .cluster-card.cluster-2 .cluster-badge {
+        background: #f39c12;
+      }
+
+      .cluster-stats-item {
+        margin-bottom: 12px;
+        color: #555;
+        font-size: 1em;
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #ecf0f1;
+      }
+
+      .cluster-stats-item:last-child {
+        border-bottom: none;
+      }
+
+      .cluster-stats-item strong {
+        color: #2d3436;
+      }
+
+      .description {
+        background-color: #f0f4f8;
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border-left: 5px solid #9b59b6;
+      }
+
+      .description h3 {
+        color: #9b59b6;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+      }
+
+      .description p {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 15px;
+      }
+
+      .description ul {
+        margin-left: 20px;
+        margin-top: 10px;
+      }
+
+      .description li {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 8px;
+      }
+
+      .description strong {
+        color: #2d3436;
+      }
+
+      .navigation {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 15px 30px;
+        text-decoration: none;
+        text-align: center;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1em;
+        transition: all 0.3s ease;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+      }
+
+      .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 1.8em;
+        }
+
+        .navigation {
+          flex-direction: column;
+        }
+
+        .cluster-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .map-container {
+          height: 500px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🚀 N-BEATS & LSTM Hybrid</h1>
+        <p>Neural Network Prediction & Deep Learning Clustering</p>
+      </div>
+
+      <div class="content">
+        <!-- Info Banner Singkat -->
+        <div class="info-banner">
+          <p>
+            💡 <strong>N-BEATS & LSTM Hybrid:</strong> Combination of N-BEATS prediction with dynamic clustering using K-Means. Select prediction year below the map to see clusters based on future predictions.
+          </p>
+        </div>
+
+        <div class="visualization">
+          <h2>
+            🌍 {% if years_to_predict %}Interactive Map - Clustering Based on Predictions{% else %}Interactive Map - Historical Data Clustering{% endif %}
+          </h2>
+          
+          <!-- Dropdown control di atas peta -->
+          <div style="background: linear-gradient(135deg, #d5a8ff 0%, #b88ce0 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 15px;">
+            <form method="POST" style="display: flex; align-items: center; gap: 15px; margin: 0;">
+              <label for="years" style="color: #2d3436; font-weight: bold; font-size: 1.1em;">
+                📅 Select Prediction Year:
+              </label>
+              <select 
+                id="years" 
+                name="years"
+                style="padding: 10px 20px; font-size: 1em; border: 2px solid #9b59b6; border-radius: 8px; background: white; color: #2d3436; font-weight: bold; cursor: pointer; min-width: 150px;">
+                <option value="1" {% if years_to_predict == 1 %}selected{% endif %}>{{ base_year + 1 }}</option>
+                <option value="2" {% if years_to_predict == 2 %}selected{% endif %}>{{ base_year + 2 }}</option>
+                <option value="3" {% if years_to_predict == 3 %}selected{% endif %}>{{ base_year + 3 }}</option>
+                <option value="4" {% if years_to_predict == 4 %}selected{% endif %}>{{ base_year + 4 }}</option>
+                <option value="5" {% if years_to_predict == 5 %}selected{% endif %}>{{ base_year + 5 }}</option>
+              </select>
+              <button 
+                type="submit" 
+                style="padding: 10px 25px; background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                🚀 Generate
+              </button>
+            </form>
+          </div>
+          
+          <div class="map-container">
+            <iframe src="{{ url_for('static', filename='dl_hybrid_map.html') }}"></iframe>
+          </div>
+        </div>
+
+        <div class="cluster-stats">
+          <h3>📊 Detailed Statistics for Each Cluster</h3>
+          <div class="cluster-grid">
+            {% for cluster_id, count in cluster_stats.items() %}
+            <div class="cluster-card cluster-{{ cluster_id }}">
+              <h4>
+                <span class="cluster-badge">Cluster {{ cluster_id }}</span>
+                <span>
+                  {% if cluster_id == 0 %} Pattern A 🔵 
+                  {% elif cluster_id == 1 %} Pattern B 🔴 
+                  {% else %} Pattern C 🟡 
+                  {% endif %}
+                </span>
+              </h4>
+
+              <div class="cluster-stats-item">
+                <span>Number of Countries:</span>
+                <strong>{{ count }}</strong>
+              </div>
+              <div class="cluster-stats-item">
+                <span>Characteristics:</span>
+                <strong>
+                  {% if cluster_id == 0 %}
+                    Deep learning cluster - Low risk pattern
+                  {% elif cluster_id == 1 %}
+                    Deep learning cluster - High risk pattern
+                  {% else %}
+                    Deep learning cluster - Medium risk pattern
+                  {% endif %}
+                </strong>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="description">
+          <h3>📖 Methodology Explanation</h3>
+
+          <p>
+            <strong>Hybrid N-BEATS + K-Means Process:</strong>
+          </p>
+          <ul>
+            <li>
+              <strong>Step 1 - Load N-BEATS Predictions:</strong> Pre-trained N-BEATS model generates predictions for all countries and stores them in cache
+            </li>
+            <li>
+              <strong>Step 2 - Select Prediction Year:</strong> System retrieves prediction value for the year selected by user (1-5 years ahead)
+            </li>
+            <li>
+              <strong>Step 3 - K-Means Clustering:</strong> K-Means algorithm performs clustering based on those prediction values
+            </li>
+            <li>
+              <strong>Step 4 - Visualization:</strong> Clustering results are visualized on an interactive world map with clear country borders
+            </li>
+          </ul>
+
+          <p><strong>Differences with ARIMA Hybrid:</strong></p>
+          <ul>
+            <li>
+              <strong>N-BEATS:</strong> Deep learning-based neural network for time series forecasting
+            </li>
+            <li>
+              <strong>Global Model:</strong> One model for all countries (multi-series), different from ARIMA which has one model per country
+            </li>
+            <li>
+              <strong>Clustering:</strong> Uses simple K-Means for efficiency, not LSTM Autoencoder
+            </li>
+            <li>
+              <strong>Performance:</strong> Average MAPE ~19% on test data set
+            </li>
+          </ul>
+
+          <p><strong>Cluster Interpretation:</strong></p>
+          <ul>
+            <li>
+              <strong>Cluster 0 (Blue - Pattern A):</strong> Countries with certain prediction characteristics from deep learning
+            </li>
+            <li>
+              <strong>Cluster 1 (Red - Pattern B):</strong> Countries with different prediction patterns
+            </li>
+            <li>
+              <strong>Cluster 2 (Yellow - Pattern C):</strong> Countries with third prediction characteristics
+            </li>
+          </ul>
+
+          <p><strong>Advantages of This Method:</strong></p>
+          <ul>
+            <li>
+              <strong>Deep Learning:</strong> Uses neural network architecture for more complex forecasting
+            </li>
+            <li>
+              <strong>Pre-cached:</strong> Predictions are pre-calculated for fast web performance
+            </li>
+            <li>
+              <strong>Interactive:</strong> Users can select prediction year and see different clustering
+            </li>
+            <li>
+              <strong>Visual Clarity:</strong> Clear country borders for better geographic identification
+            </li>
+          </ul>
+        </div>
+
+        <div class="navigation">
+          <a href="/" class="btn btn-primary">🏠 Home Page</a>
+          <a href="/dl-clustering" class="btn btn-secondary">🔮 LSTM Clustering</a>
+          <a href="/dl-prediction" class="btn btn-success">🧠 N-BEATS Prediction</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

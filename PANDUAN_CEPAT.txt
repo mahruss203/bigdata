@@ -1,0 +1,41 @@
+# ===================================================
+# PANDUAN CEPAT - Aplikasi Flask K-Means & ARIMA
+# ===================================================
+
+# 1. INSTALL DEPENDENCIES
+# Buka terminal di VSCode (Ctrl + `) dan jalankan:
+pip install -r requirements.txt
+
+# 2. JALANKAN APLIKASI
+python app.py
+
+# 3. AKSES DI BROWSER
+# Halaman Utama:     http://127.0.0.1:5000/
+# Visualisasi K-Means: http://127.0.0.1:5000/kmeans
+# Visualisasi ARIMA:   http://127.0.0.1:5000/arima
+
+# 4. STOP APLIKASI
+# Tekan Ctrl + C di terminal
+
+# ===================================================
+# STRUKTUR FILE
+# ===================================================
+# app.py                    -> Aplikasi Flask utama
+# requirements.txt          -> Dependencies Python
+# templates/
+#   ├── kmeans.html        -> Template K-Means
+#   └── arima.html         -> Template ARIMA
+# static/
+#   ├── kmeans_plot.png    -> Output gambar K-Means (auto-generated)
+#   └── arima_plot.png     -> Output gambar ARIMA (auto-generated)
+
+# ===================================================
+# TROUBLESHOOTING
+# ===================================================
+# Jika error "Module not found":
+# pip install Flask pandas matplotlib seaborn scikit-learn
+
+# Jika port 5000 sudah digunakan:
+# Edit app.py, ganti port=5000 menjadi port=5001
+
+# ===================================================

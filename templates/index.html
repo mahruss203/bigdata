@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Mining Visualization Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        color: white;
+        padding: 40px 20px;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        font-size: 3em;
+        margin-bottom: 10px;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        animation: fadeInDown 0.8s ease-out;
+      }
+
+      .header p {
+        font-size: 1.3em;
+        opacity: 0.95;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      .method-toggle {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 40px;
+        animation: fadeIn 1s ease-out;
+      }
+
+      .method-btn {
+        padding: 15px 40px;
+        font-size: 1.2em;
+        font-weight: bold;
+        border: 3px solid white;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .method-btn:hover {
+        background: white;
+        color: #667eea;
+        transform: scale(1.05);
+      }
+
+      .method-btn.active {
+        background: white;
+        color: #667eea;
+        box-shadow: 0 5px 20px rgba(255, 255, 255, 0.4);
+      }
+
+      .content-section {
+        display: none;
+      }
+
+      .content-section.active {
+        display: block;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+        animation: fadeIn 1s ease-out;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+      }
+
+      .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .stat-card .icon {
+        font-size: 3em;
+        margin-bottom: 15px;
+        opacity: 0.8;
+      }
+
+      .stat-card h3 {
+        color: #667eea;
+        font-size: 1em;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .stat-card .value {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .stat-card .label {
+        color: #666;
+        font-size: 0.9em;
+      }
+
+      .features-section {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 1.2s ease-out;
+      }
+
+      .features-section h2 {
+        color: #667eea;
+        font-size: 2em;
+        margin-bottom: 30px;
+        text-align: center;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 15px;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      .feature-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 30px;
+        border-radius: 15px;
+        border-left: 5px solid #667eea;
+        transition: transform 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateX(10px);
+      }
+
+      .feature-card h3 {
+        color: #667eea;
+        font-size: 1.5em;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .feature-card ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .feature-card li {
+        color: #555;
+        margin-bottom: 10px;
+        padding-left: 25px;
+        position: relative;
+      }
+
+      .feature-card li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #667eea;
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+
+      .navigation-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+      }
+
+      .nav-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+      }
+
+      .nav-card:hover {
+        transform: translateY(-15px) scale(1.05);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      }
+
+      .nav-card.kmeans {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .nav-card.arima {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+      }
+
+      .nav-card .icon {
+        font-size: 4em;
+        margin-bottom: 20px;
+        animation: bounce 2s infinite;
+      }
+
+      .nav-card h3 {
+        font-size: 1.8em;
+        margin-bottom: 15px;
+      }
+
+      .nav-card p {
+        font-size: 1.1em;
+        opacity: 0.9;
+        line-height: 1.6;
+      }
+
+      .nav-card .btn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 30px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid white;
+        border-radius: 25px;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s ease;
+      }
+
+      .nav-card .btn:hover {
+        background: white;
+        color: #667eea;
+      }
+
+      .nav-card.arima .btn:hover {
+        color: #11998e;
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .stats-grid,
+        .features-grid,
+        .navigation-section {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎯 Data Mining Visualization Dashboard</h1>
+        <p>Machine Learning & Deep Learning for Stroke Deaths Analysis</p>
+      </div>
+
+      <div class="method-toggle">
+        <button class="method-btn active" onclick="toggleMethod('ml')">
+          🤖 Machine Learning
+        </button>
+        <button class="method-btn" onclick="toggleMethod('dl')">
+          🧠 Deep Learning
+        </button>
+      </div>
+
+      <!-- MACHINE LEARNING SECTION -->
+      <div id="ml-section" class="content-section active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="icon">🌍</div>
+            <h3>Total Countries</h3>
+            <div class="value">{{ num_countries }}</div>
+            <div class="label">Countries Analyzed</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="icon">🎨</div>
+            <h3>Number of Clusters</h3>
+            <div class="value">{{ num_clusters }}</div>
+            <div class="label">K-Means Clusters</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="icon">📊</div>
+            <h3>Historical Data</h3>
+            <div class="value">{{ num_years_historical }}</div>
+            <div class="label">Years of ARIMA Data</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="icon">🔮</div>
+            <h3>Prediction Data</h3>
+            <div class="value">{{ num_years_prediction }}</div>
+            <div class="label">Years of ARIMA Prediction</div>
+          </div>
+        </div>
+
+        <div class="features-section">
+          <h2>📋 Application Features and Navigation</h2>
+
+          <div class="features-grid">
+            <div class="feature-card">
+              <h3>🗺️ K-Means Clustering</h3>
+              <ul>
+                <li>Interactive world map visualization</li>
+                <li>Colors based on clusters</li>
+                <li>Hover for country details</li>
+                <li>Statistics per cluster</li>
+                <li>Interactive zoom and pan</li>
+              </ul>
+            </div>
+
+            <div class="feature-card">
+              <h3>📈 ARIMA Time Series</h3>
+              <ul>
+                <li>Historical data charts</li>
+                <li>Future predictions</li>
+                <li>Transition boundary line</li>
+                <li>Complete statistical information</li>
+                <li>Easy-to-read number format</li>
+              </ul>
+            </div>
+
+            <div class="feature-card">
+              <h3>🔮 Prediction & Clustering Hybrid</h3>
+              <ul>
+                <li>Combination of prediction & clustering</li>
+                <li>Select prediction year (1-5 years)</li>
+                <li>Re-clustering based on predictions</li>
+                <li>Interactive map with new clusters</li>
+                <li>Pre-cached ARIMA models for performance</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="feature-card" style="grid-column: 1 / -1">
+            <h3>⚡ Additional Features</h3>
+            <ul>
+              <li>Real-time statistics dashboard from actual data</li>
+              <li>Intuitive navigation between pages</li>
+              <li>Responsive design for all devices</li>
+              <li>Professional and interactive visualizations</li>
+              <li>Auto-refresh visualizations on every access</li>
+              <li>Comprehensive error handling</li>
+            </ul>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+            margin-bottom: 30px;
+          "
+        >
+          <a
+            href="/arima-kmeans"
+            class="nav-card"
+            style="
+              background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+              color: white;
+              max-width: 400px;
+            "
+          >
+            <div class="icon">🔮</div>
+            <h3>Prediction & Clustering Hybrid</h3>
+            <p>
+              Predict the future with ARIMA, then re-cluster with K-Means based
+              on prediction results
+            </p>
+            <span class="btn">View Hybrid →</span>
+          </a>
+        </div>
+
+        <div class="navigation-section">
+          <a href="/kmeans" class="nav-card kmeans">
+            <div class="icon">🗺️</div>
+            <h3>K-Means Clustering</h3>
+            <p>
+              View world map visualization with country groupings based on
+              K-Means clusters
+            </p>
+            <span class="btn">View Map →</span>
+          </a>
+
+          <a href="/arima" class="nav-card arima">
+            <div class="icon">📈</div>
+            <h3>ARIMA Prediction</h3>
+            <p>
+              View time series chart with historical data and ARIMA prediction
+              results
+            </p>
+            <span class="btn">View Chart →</span>
+          </a>
+        </div>
+      </div>
+      <!-- END MACHINE LEARNING SECTION -->
+
+      <!-- DEEP LEARNING SECTION -->
+      <div id="dl-section" class="content-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="icon">🌍</div>
+            <h3>Total Countries</h3>
+            <div class="value">{{ num_countries }}</div>
+            <div class="label">Countries Analyzed</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="icon">🧠</div>
+            <h3>LSTM Layers</h3>
+            <div class="value">3</div>
+            <div class="label">Hidden Layers</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="icon">📊</div>
+            <h3>Latent Dim</h3>
+            <div class="value">10</div>
+            <div class="label">Feature Space</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="icon">🎯</div>
+            <h3>N-BEATS</h3>
+            <div class="value">19.32%</div>
+            <div class="label">Average MAPE</div>
+          </div>
+        </div>
+
+        <div class="features-section">
+          <h2>🧠 Deep Learning Features</h2>
+
+          <div class="features-grid">
+            <div class="feature-card">
+              <h3>🔮 LSTM Autoencoder Clustering</h3>
+              <ul>
+                <li>Automatic feature extraction from time series</li>
+                <li>Latent space representation</li>
+                <li>K-means clustering on latent features</li>
+                <li>World map visualization per cluster</li>
+                <li>Anomaly detection capability</li>
+              </ul>
+            </div>
+
+            <div class="feature-card">
+              <h3>📈 N-BEATS Forecasting</h3>
+              <ul>
+                <li>Neural basis expansion analysis</li>
+                <li>Multi-step time series prediction</li>
+                <li>Global model for all countries</li>
+                <li>MAPE evaluation per country</li>
+                <li>Interpretable forecast components</li>
+              </ul>
+            </div>
+
+            <div class="feature-card">
+              <h3>🚀 N-BEATS & LSTM Hybrid</h3>
+              <ul>
+                <li>Prediction with N-BEATS neural network</li>
+                <li>Clustering with LSTM Autoencoder</li>
+                <li>Combination of forecasting & feature extraction</li>
+                <li>Map visualization with predicted clusters</li>
+                <li>Deep learning end-to-end pipeline</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="feature-card" style="grid-column: 1 / -1">
+            <h3>⚡ Deep Learning Architecture</h3>
+            <ul>
+              <li>LSTM Autoencoder with 3 hidden layers (128, 64, 32 units)</li>
+              <li>Bottleneck layer 10-dimensional for latent representation</li>
+              <li>
+                N-BEATS with input chunk length 2 and output chunk length 1
+              </li>
+              <li>Training with PyTorch and Darts framework</li>
+              <li>Model persistence for deployment</li>
+              <li>Historical forecasting for backtest evaluation</li>
+            </ul>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+            margin-bottom: 30px;
+          "
+        >
+          <a
+            href="/dl-hybrid"
+            class="nav-card"
+            style="
+              background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+              color: white;
+              max-width: 400px;
+            "
+          >
+            <div class="icon">🚀</div>
+            <h3>N-BEATS & LSTM Hybrid</h3>
+            <p>
+              Prediction with N-BEATS, feature extraction & clustering with LSTM
+              Autoencoder
+            </p>
+            <span class="btn">View Hybrid →</span>
+          </a>
+        </div>
+
+        <div class="navigation-section">
+          <a href="/dl-clustering" class="nav-card kmeans">
+            <div class="icon">🔮</div>
+            <h3>LSTM Autoencoder</h3>
+            <p>
+              Clustering using deep learning with LSTM Autoencoder for feature
+              extraction
+            </p>
+            <span class="btn">View Clustering →</span>
+          </a>
+
+          <a href="/dl-prediction" class="nav-card arima">
+            <div class="icon">🧠</div>
+            <h3>N-BEATS Forecasting</h3>
+            <p>Time series prediction using Neural Basis Expansion Analysis</p>
+            <span class="btn">View Prediction →</span>
+          </a>
+        </div>
+      </div>
+      <!-- END DEEP LEARNING SECTION -->
+    </div>
+
+    <script>
+      function toggleMethod(method) {
+        // Toggle buttons
+        const buttons = document.querySelectorAll(".method-btn");
+        buttons.forEach((btn) => btn.classList.remove("active"));
+
+        if (method === "ml") {
+          buttons[0].classList.add("active");
+          document.getElementById("ml-section").classList.add("active");
+          document.getElementById("dl-section").classList.remove("active");
+        } else {
+          buttons[1].classList.add("active");
+          document.getElementById("ml-section").classList.remove("active");
+          document.getElementById("dl-section").classList.add("active");
+        }
+      }
+    </script>
+  </body>
+</html>
